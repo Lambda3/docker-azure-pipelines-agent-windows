@@ -7,6 +7,8 @@ It will not work with Azure DevOps Server.
 
 [![Downloads from Docker Hub](https://img.shields.io/docker/pulls/lambda3/azure-pipelines-agent-windows.svg)](https://registry.hub.docker.com/u/lambda3/azure-pipelines-agent-windows)
 [![Stars on Docker Hub](https://img.shields.io/docker/stars/lambda3/azure-pipelines-agent-windows.svg)](https://registry.hub.docker.com/u/lambda3/azure-pipelines-agent-windows) [![](https://images.microbadger.com/badges/image/lambda3/azure-pipelines-agent-windows.svg)](https://microbadger.com/images/lambda3/azure-pipelines-agent-windows "Get your own image badge on microbadger.com")
+[![Build
+Status](https://dev.azure.com/lambda3foss/docker-azure-pipelines-agent-windows/_apis/build/status/Lambda3.docker-azure-pipelines-agent-windows?branchName=master)](https://dev.azure.com/lambda3foss/docker-azure-pipelines-agent-windows/_build/latest?definitionId=1&branchName=master)
 
 ## Supported tags
 

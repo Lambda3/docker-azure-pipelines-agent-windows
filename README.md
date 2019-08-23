@@ -43,6 +43,16 @@ persistent across agent restarts. Also, it is recommended that you mount to a
 directory that is relative to this directory, like the staging directory, so
 when it is mounted on the host, it is also available for the agent.
 
+### With Docker
+
+If you want to run Docker on Docker, and access the underlying Docker engine,
+you have to mount the Docker named pipe, and user the `docker` tag of this
+repository, like so:
+
+````powershell
+docker run --name azure-pipelines-agent-windows -ti -v \\.\pipe\docker_engine:\\.\pipe\docker_engine -e VS_TENANT=$env:VS_TENANT -e AGENT_PAT=$env:AGENT_PAT -d -ti azure-pipelines-agent-windows:docker
+````
+
 ## Maintainers
 
 * [Giovanni Bassi](http://blog.lambda3.com.br/L3/giovannibassi/), aka Giggio, [Lambda3](http://www.lambda3.com.br), [@giovannibassi](https://twitter.com/giovannibassi)

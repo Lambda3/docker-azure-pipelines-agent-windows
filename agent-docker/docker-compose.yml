@@ -1,0 +1,15 @@
+version: "2"
+services:
+  agent:
+    build:
+      context: ./
+      dockerfile: Dockerfile
+    environment:
+      AGENT_PAT:
+      AGENT_POOL:
+      VS_TENANT:
+    volumes:
+      - \\.\pipe\docker_engine:\\.\pipe\docker_engine
+    stdin_open: true
+    tty: true
+    restart: always

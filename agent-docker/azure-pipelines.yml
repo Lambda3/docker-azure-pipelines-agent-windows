@@ -1,5 +1,13 @@
 trigger:
-  - master
+  branches:
+    include:
+      - master
+  paths:
+    include:
+      - agent-docker/*
+    exclude:
+      - "*/*.md"
+      - "*/*.txt"
 
 pool:
   vmImage: "windows-latest"
@@ -10,4 +18,5 @@ steps:
     inputs:
       containerRegistry: "Docker Lambda3"
       repository: "lambda3/azure-pipelines-agent-windows"
-      tags: latest
+      tags: docker
+      Dockerfile: "$(Build.SourcesDirectory)/agent-docker/Dockerfile"

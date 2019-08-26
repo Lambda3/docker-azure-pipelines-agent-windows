@@ -13,10 +13,11 @@ Status](https://dev.azure.com/lambda3foss/docker-azure-pipelines-agent-windows/_
 ## Supported tags
 
 - [`latest` (*agent/Dockerfile*)](https://github.com/lambda3/docker-azure-pipelines-agent-windows/blob/master/agent/Dockerfile)
+- [`docker` (*agent-docker/Dockerfile*)](https://github.com/Lambda3/docker-azure-pipelines-agent-windows/blob/master/agent-docker/Dockerfile)
 
 ## Configuration
 
-For `latest`, you need to set these environment variables:
+You need to set these environment variables:
 
 * `AGENT_PAT` - The personal access token from Azure Pipelines. Required.
 * `VS_TENANT` - The Azure Pipelines tenant, a.k.a. the value that goes before .visualstudio.com, i.e., on foo.visualstudio.com, should be `foo`. Required.
@@ -52,6 +53,9 @@ repository, like so:
 ````powershell
 docker run --name azure-pipelines-agent-windows -ti -v \\.\pipe\docker_engine:\\.\pipe\docker_engine -e VS_TENANT=$env:VS_TENANT -e AGENT_PAT=$env:AGENT_PAT -d -ti azure-pipelines-agent-windows:docker
 ````
+
+When using docker-compose you will need the full syntax to mount the named pipe.
+See [this example](https://github.com/Lambda3/docker-azure-pipelines-agent-windows/blob/master/agent-docker/docker-compose-image.yml).
 
 ## Maintainers
 

@@ -3,11 +3,14 @@ services:
   agent:
     image: lambda3/azure-pipelines-agent-windows:docker
     environment:
-      AGENT_PAT:
-      AGENT_POOL:
-      VS_TENANT:
+      - VS_TENANT=${VS_TENANT:?Variable VS_TENANT is required.}
+      - AGENT_PAT=${AGENT_PAT:?Variable AGENT_PAT is required.}
+      - AGENT_POOL=${AGENT_POOL:-Default}
     volumes:
-      - \\.\pipe\docker_engine:\\.\pipe\docker_engine
+      - c:\agent\_works:c:\agent\_works
+      - source: '\\.\pipe\docker_engine'
+        target: '\\.\pipe\docker_engine'
+        type: npipe
     stdin_open: true
     tty: true
     restart: always

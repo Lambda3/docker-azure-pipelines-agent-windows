@@ -32,8 +32,10 @@ RUN Invoke-WebRequest -Uri https://nodejs.org/dist/v12.8.1/node-v12.8.1-x64.msi 
 RUN Invoke-WebRequest -Uri https://github.com/yarnpkg/yarn/releases/download/v1.17.3/yarn-1.17.3.msi -OutFile yarn.msi; `
     Start-Process msiexec.exe -Wait -ArgumentList '/I yarn.msi /quiet'; `
     Remove-Item yarn.msi
-# chrome, kubectl, helm, terraform:
-RUN choco install -y GoogleChrome kubernetes-cli kubernetes-helm terraform
+# kubectl, helm, terraform, git:
+RUN choco install -y kubernetes-cli kubernetes-helm terraform git.install
+# chrome, ignores checksum because they cannot be safely verified
+RUN choco install --ignore-checksum -y GoogleChrome
 # vim
 RUN Invoke-WebRequest http://ftp.vim.org/pub/vim/pc/vim81w32.zip -outfile vim.zip; `
     Add-Type -AssemblyName System.IO.Compression.FileSystem; `

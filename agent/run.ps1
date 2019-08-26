@@ -1,5 +1,7 @@
 #!/usr/bin/env pwsh
 $ErrorActionPreference = "Stop"
 
-cd $PSScriptRoot
+Push-Location $PSScriptRoot
 . $PSScriptRoot/bin/Agent.Listener run
+Wait-Event
+Pop-Location

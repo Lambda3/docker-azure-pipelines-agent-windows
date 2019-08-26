@@ -34,6 +34,12 @@ RUN Invoke-WebRequest -Uri https://github.com/yarnpkg/yarn/releases/download/v1.
     Remove-Item yarn.msi
 # chrome, kubectl, helm, terraform:
 RUN choco install -y GoogleChrome kubernetes-cli kubernetes-helm terraform
+# vim
+RUN Invoke-WebRequest http://ftp.vim.org/pub/vim/pc/vim81w32.zip -outfile vim.zip; `
+    Add-Type -AssemblyName System.IO.Compression.FileSystem; `
+    [System.IO.Compression.ZipFile]::ExtractToDirectory(\"$(pwd)\vim.zip\", \"$env:ProgramFiles\"); `
+    rm vim.zip; `
+    [Environment]::SetEnvironmentVariable('PATH', \"$env:ProgramFiles\vim\vim81\;$env:PATH\", [EnvironmentVariableTarget]::Machine)
 # agent:
 RUN Invoke-WebRequest https://vstsagentpackage.azureedge.net/agent/2.155.1/vsts-agent-win-x64-2.155.1.zip -OutFile agent.zip; `
     Add-Type -AssemblyName System.IO.Compression.FileSystem ; `

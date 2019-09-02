@@ -60,6 +60,8 @@ RUN Invoke-WebRequest -Uri https://github.com/yarnpkg/yarn/releases/download/v1.
 RUN choco install --no-progress -y kubernetes-cli kubernetes-helm terraform git.install
 # chrome, ignores checksum because they cannot be safely verified
 RUN choco install --no-progress --ignore-checksum -y GoogleChrome
+# openjdk
+RUN choco install --no-progress -y openjdk --version 11.0.2.01
 # vim
 RUN Invoke-WebRequest http://ftp.vim.org/pub/vim/pc/vim81w32.zip -outfile vim.zip; `
     Add-Type -AssemblyName System.IO.Compression.FileSystem; `

@@ -62,6 +62,10 @@ RUN Invoke-WebRequest http://ftp.vim.org/pub/vim/pc/vim81w32.zip -outfile vim.zi
     [System.IO.Compression.ZipFile]::ExtractToDirectory(\"$(pwd)\vim.zip\", \"$env:ProgramFiles\"); `
     rm vim.zip; `
     [Environment]::SetEnvironmentVariable('PATH', \"$env:ProgramFiles\vim\vim81\;$env:PATH\", [EnvironmentVariableTarget]::Machine)
+# azurerm
+RUN Invoke-WebRequest -Uri https://github.com/Azure/azure-powershell/releases/download/v6.13.1-November2018/Azure-Cmdlets-6.13.1.24243-x64.msi -OutFile .\azurerm.msi; `
+    Start-Process msiexec.exe -Wait -ArgumentList '/I azurerm.msi /quiet'; `
+    Remove-Item azurerm.msi
 # agent:
 RUN Invoke-WebRequest https://vstsagentpackage.azureedge.net/agent/2.158.0/vsts-agent-win-x64-2.158.0.zip -OutFile agent.zip; `
     Add-Type -AssemblyName System.IO.Compression.FileSystem ; `

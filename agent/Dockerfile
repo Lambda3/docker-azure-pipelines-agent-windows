@@ -76,6 +76,10 @@ RUN $acl = Get-Acl c:\agent\; `
     $acl.SetOwner([System.Security.Principal.NTAccount] 'agentuser'); `
     get-childitem -File c:\agent\ | % { Set-Acl -Path $_ -AclObject $acl }; `
     Set-Acl -Path c:\agent\ -AclObject $acl
+RUN . 'C:\Windows\Microsoft.NET\Framework\v4.0.30319\Aspnet_regiis.exe' -ga containeradministrator; `
+    . 'C:\Windows\Microsoft.NET\Framework\v4.0.30319\Aspnet_regiis.exe' -ga agentuser; `
+    . 'C:\Windows\Microsoft.NET\Framework64\v4.0.30319\Aspnet_regiis.exe' -ga containeradministrator; `
+    . 'C:\Windows\Microsoft.NET\Framework64\v4.0.30319\Aspnet_regiis.exe' -ga agentuser
 USER agentuser
 
 CMD ["pwsh", "-f", "configureAndRun.ps1"]

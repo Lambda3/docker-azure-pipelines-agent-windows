@@ -66,8 +66,24 @@ RUN Invoke-WebRequest http://ftp.vim.org/pub/vim/pc/vim81w32.zip -outfile vim.zi
 RUN Invoke-WebRequest -Uri https://github.com/Azure/azure-powershell/releases/download/v6.13.1-November2018/Azure-Cmdlets-6.13.1.24243-x64.msi -OutFile .\azurerm.msi; `
     Start-Process msiexec.exe -Wait -ArgumentList '/I azurerm.msi /quiet'; `
     Remove-Item azurerm.msi
+#setup iis permissions
+RUN . 'C:\Windows\Microsoft.NET\Framework\v4.0.30319\Aspnet_regiis.exe' -ga containeradministrator; `
+    . 'C:\Windows\Microsoft.NET\Framework\v4.0.30319\Aspnet_regiis.exe' -ga agentuser; `
+    . 'C:\Windows\Microsoft.NET\Framework64\v4.0.30319\Aspnet_regiis.exe' -ga containeradministrator; `
+    . 'C:\Windows\Microsoft.NET\Framework64\v4.0.30319\Aspnet_regiis.exe' -ga agentuser
 # agent:
-RUN Invoke-WebRequest https://vstsagentpackage.azureedge.net/agent/2.158.0/vsts-agent-win-x64-2.158.0.zip -OutFile agent.zip; `
+# auto download latest release, wait for bug
+# https://github.com/microsoft/azure-pipelines-agent/issues/2521 to be fixed
+#RUN $releases = Invoke-RestMethod https://api.github.com/repos/microsoft/azure-pipelines-agent/releases; `
+#    $releaseTag = npx -q semvermaxcli ( $releases | ? { ! $_.prerelease } | % { $_.tag_name }); `
+#    $assetsUrl = Invoke-RestMethod ($releases | ? { $_.tag_name -eq $releaseTag }).assets_url; `
+#    $assets = Invoke-RestMethod $assetsUrl.browser_download_url; `
+#    $agentUrl = ($assets | ? { $_.platform -eq 'win-x64' }).downloadUrl; `
+#    Invoke-WebRequest $agentUrl -OutFile agent.zip; `
+#    Add-Type -AssemblyName System.IO.Compression.FileSystem ; `
+#    [System.IO.Compression.ZipFile]::ExtractToDirectory('agent.zip', \"$PWD\"); `
+#    Remove-Item agent.zip
+RUN Invoke-WebRequest https://vstsagentpackage.azureedge.net/agent/2.159.1/vsts-agent-win-x64-2.159.1.zip -OutFile agent.zip; `
     Add-Type -AssemblyName System.IO.Compression.FileSystem ; `
     [System.IO.Compression.ZipFile]::ExtractToDirectory('agent.zip', \"$PWD\"); `
     Remove-Item agent.zip
@@ -76,10 +92,6 @@ RUN $acl = Get-Acl c:\agent\; `
     $acl.SetOwner([System.Security.Principal.NTAccount] 'agentuser'); `
     get-childitem -File c:\agent\ | % { Set-Acl -Path $_ -AclObject $acl }; `
     Set-Acl -Path c:\agent\ -AclObject $acl
-RUN . 'C:\Windows\Microsoft.NET\Framework\v4.0.30319\Aspnet_regiis.exe' -ga containeradministrator; `
-    . 'C:\Windows\Microsoft.NET\Framework\v4.0.30319\Aspnet_regiis.exe' -ga agentuser; `
-    . 'C:\Windows\Microsoft.NET\Framework64\v4.0.30319\Aspnet_regiis.exe' -ga containeradministrator; `
-    . 'C:\Windows\Microsoft.NET\Framework64\v4.0.30319\Aspnet_regiis.exe' -ga agentuser
 USER agentuser
 
 CMD ["pwsh", "-f", "configureAndRun.ps1"]

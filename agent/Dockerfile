@@ -32,10 +32,11 @@ RUN Invoke-WebRequest https://aka.ms/vs/16/release/vs_buildtools.exe -outfile $e
     Push-Location $env:temp; `
     remove-item * -Recurse -Force -ErrorAction SilentlyContinue; `
     Pop-Location
-# netcore 2.1 and 2.2 (3.0 is already installed)
+# netcore 2.1, 2.2 and 3.0 (3.1 is already installed)
 RUN Invoke-WebRequest https://dot.net/v1/dotnet-install.ps1 -OutFile dotnet-install.ps1; `
     .\dotnet-install.ps1 -Channel 2.1 -InstallDir $env:ProgramFiles\dotnet; `
     .\dotnet-install.ps1 -Channel 2.2 -InstallDir $env:ProgramFiles\dotnet; `
+    .\dotnet-install.ps1 -Channel 3.0 -InstallDir $env:ProgramFiles\dotnet; `
     [Environment]::SetEnvironmentVariable('PATH', \"$HOME\.dotnet\tools;$env:PATH\", [EnvironmentVariableTarget]::Machine); `
     Remove-Item dotnet-install.ps1
 # az cli:
@@ -46,10 +47,11 @@ RUN Invoke-WebRequest -Uri https://aka.ms/installazurecliwindows -OutFile .\Azur
 RUN Set-ExecutionPolicy Bypass -Scope Process -Force; iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1')); `
     [Environment]::SetEnvironmentVariable('PATH', \"$env:ProgramData\chocolatey\bin\;$env:PATH\", [EnvironmentVariableTarget]::Machine)
 # pwsh:
-RUN Invoke-WebRequest -Uri https://github.com/PowerShell/PowerShell/releases/download/v6.2.3/PowerShell-6.2.3-win-x64.msi -OutFile pwsh.msi; `
+RUN Invoke-WebRequest -Uri https://github.com/PowerShell/PowerShell/releases/download/v7.0.0-rc.1/PowerShell-7.0.0-rc.1-win-x64.msi -OutFile pwsh.msi; `
     Start-Process msiexec.exe -Wait -ArgumentList '/I pwsh.msi /quiet'; `
-    Remove-Item pwsh.msi
-SHELL ["pwsh.exe", "-Command"]
+    Remove-Item pwsh.msi; `
+    [Environment]::SetEnvironmentVariable('PATH', \"$env:ProgramFiles\PowerShell\7-preview\;$env:PATH\", [EnvironmentVariableTarget]::Machine)
+SHELL ["pwsh.exe", "-NoLogo", "-Command"]
 # kubectl, helm, terraform, git, iis express, node, npm, yarn:
 RUN choco install --no-progress -y kubernetes-cli kubernetes-helm terraform git.install iisexpress nodejs.install yarn nvm.portable
 # chrome, ignores checksum because they cannot be safely verified
@@ -73,7 +75,7 @@ RUN . 'C:\Windows\Microsoft.NET\Framework\v4.0.30319\Aspnet_regiis.exe' -ga cont
     . 'C:\Windows\Microsoft.NET\Framework64\v4.0.30319\Aspnet_regiis.exe' -ga agentuser
 # agent:
 # auto download latest release, wait for bug
-# https://github.com/microsoft/azure-pipelines-agent/issues/2521 to be fixed
+# https://github.com/microsoft/azure-pipelines-agent/issues/2688 to be fixed
 #RUN $releases = Invoke-RestMethod https://api.github.com/repos/microsoft/azure-pipelines-agent/releases; `
 #    $releaseTag = npx -q semvermaxcli ( $releases | ? { ! $_.prerelease } | % { $_.tag_name }); `
 #    $assetsUrl = Invoke-RestMethod ($releases | ? { $_.tag_name -eq $releaseTag }).assets_url; `
@@ -83,7 +85,7 @@ RUN . 'C:\Windows\Microsoft.NET\Framework\v4.0.30319\Aspnet_regiis.exe' -ga cont
 #    Add-Type -AssemblyName System.IO.Compression.FileSystem ; `
 #    [System.IO.Compression.ZipFile]::ExtractToDirectory('agent.zip', \"$PWD\"); `
 #    Remove-Item agent.zip
-RUN Invoke-WebRequest https://vstsagentpackage.azureedge.net/agent/2.159.1/vsts-agent-win-x64-2.159.1.zip -OutFile agent.zip; `
+RUN Invoke-WebRequest https://vstsagentpackage.azureedge.net/agent/2.163.1/vsts-agent-win-x64-2.163.1.zip -OutFile agent.zip; `
     Add-Type -AssemblyName System.IO.Compression.FileSystem ; `
     [System.IO.Compression.ZipFile]::ExtractToDirectory('agent.zip', \"$PWD\"); `
     Remove-Item agent.zip

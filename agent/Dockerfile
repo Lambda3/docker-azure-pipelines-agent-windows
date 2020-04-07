@@ -66,6 +66,9 @@ RUN Invoke-WebRequest http://ftp.vim.org/pub/vim/pc/vim81w32.zip -outfile vim.zi
 RUN Invoke-WebRequest -Uri https://github.com/Azure/azure-powershell/releases/download/v6.13.1-November2018/Azure-Cmdlets-6.13.1.24243-x64.msi -OutFile .\azurerm.msi; `
     Start-Process msiexec.exe -Wait -ArgumentList '/I azurerm.msi /quiet'; `
     Remove-Item azurerm.msi
+# azureps
+RUN $ProgressPreference=’SilentlyContinue’; `
+    Install-Module -Name Az -Repository PSGallery -Force -Scope AllUsers -AllowClobber
 #setup iis permissions
 RUN . 'C:\Windows\Microsoft.NET\Framework\v4.0.30319\Aspnet_regiis.exe' -ga containeradministrator; `
     . 'C:\Windows\Microsoft.NET\Framework\v4.0.30319\Aspnet_regiis.exe' -ga agentuser; `

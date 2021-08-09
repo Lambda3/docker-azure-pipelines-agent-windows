@@ -45,7 +45,7 @@ RUN Invoke-WebRequest -Uri https://aka.ms/installazurecliwindows -OutFile .\Azur
 RUN Set-ExecutionPolicy Bypass -Scope Process -Force; iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1')); `
     [Environment]::SetEnvironmentVariable('PATH', \"$env:ProgramData\chocolatey\bin\;$env:PATH\", [EnvironmentVariableTarget]::Machine)
 # pwsh:
-RUN Invoke-WebRequest -Uri https://github.com/PowerShell/PowerShell/releases/download/v7.0.0/PowerShell-7.0.0-win-x64.msi -OutFile pwsh.msi; `
+RUN Invoke-WebRequest -Uri https://github.com/PowerShell/PowerShell/releases/download/v7.1.3/PowerShell-7.1.3-win-x64.msi -OutFile pwsh.msi; `
     Start-Process msiexec.exe -Wait -ArgumentList '/I pwsh.msi /quiet'; `
     Remove-Item pwsh.msi; `
     [Environment]::SetEnvironmentVariable('PATH', \"$env:ProgramFiles\PowerShell\7\;$env:PATH\", [EnvironmentVariableTarget]::Machine)
@@ -68,11 +68,22 @@ RUN $ProgressPreference=’SilentlyContinue’; `
 # azureps
 RUN $ProgressPreference=’SilentlyContinue’; `
     Install-Module -Name Az -Repository PSGallery -Force -Scope AllUsers -AllowClobber
-#setup iis permissions
+# setup iis permissions
 RUN . 'C:\Windows\Microsoft.NET\Framework\v4.0.30319\Aspnet_regiis.exe' -ga containeradministrator; `
     . 'C:\Windows\Microsoft.NET\Framework\v4.0.30319\Aspnet_regiis.exe' -ga agentuser; `
     . 'C:\Windows\Microsoft.NET\Framework64\v4.0.30319\Aspnet_regiis.exe' -ga containeradministrator; `
     . 'C:\Windows\Microsoft.NET\Framework64\v4.0.30319\Aspnet_regiis.exe' -ga agentuser
+# docker
+RUN mkdir $env:temp\docker\extracted\ | out-null; `
+    mkdir $env:ProgramFiles\Docker\ | out-null; `
+    Invoke-WebRequest https://dockermsft.azureedge.net/dockercontainer/docker-20-10-6.zip -OutFile $env:temp\docker\docker.zip; `
+    Add-Type -AssemblyName System.IO.Compression.FileSystem ; `
+    [System.IO.Compression.ZipFile]::ExtractToDirectory(\"$env:temp\docker\docker.zip\", \"$env:temp\docker\extracted\"); `
+    get-childitem -Recurse \"$env:temp\docker\extracted\docker\" | Move-Item -Destination \"$env:ProgramFiles\Docker\"; `
+    Remove-Item $env:temp\docker\ -Recurse -Force; `
+    [Environment]::SetEnvironmentVariable('PATH', \"$env:ProgramFiles\Docker\;$env:PATH\", [EnvironmentVariableTarget]::Machine);
+RUN [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; `
+    Invoke-WebRequest https://github.com/docker/compose/releases/download/1.29.2/docker-compose-Windows-x86_64.exe -UseBasicParsing -OutFile $Env:ProgramFiles\Docker\docker-compose.exe
 # agent:
 # auto download latest release, wait for bug
 # https://github.com/microsoft/azure-pipelines-agent/issues/2688 to be fixed
@@ -85,7 +96,7 @@ RUN . 'C:\Windows\Microsoft.NET\Framework\v4.0.30319\Aspnet_regiis.exe' -ga cont
 #    Add-Type -AssemblyName System.IO.Compression.FileSystem ; `
 #    [System.IO.Compression.ZipFile]::ExtractToDirectory('agent.zip', \"$PWD\"); `
 #    Remove-Item agent.zip
-RUN Invoke-WebRequest https://vstsagentpackage.azureedge.net/agent/2.165.2/vsts-agent-win-x64-2.165.2.zip -OutFile agent.zip; `
+RUN Invoke-WebRequest https://vstsagentpackage.azureedge.net/agent/2.190.0/vsts-agent-win-x64-2.190.0.zip -OutFile agent.zip; `
     Add-Type -AssemblyName System.IO.Compression.FileSystem ; `
     [System.IO.Compression.ZipFile]::ExtractToDirectory('agent.zip', \"$PWD\"); `
     Remove-Item agent.zip

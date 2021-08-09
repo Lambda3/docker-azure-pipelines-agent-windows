@@ -6,9 +6,7 @@ This repository contains `Dockerfile` definitions for
 It will not work with Azure DevOps Server.
 
 [![Downloads from Docker Hub](https://img.shields.io/docker/pulls/lambda3/azure-pipelines-agent-windows.svg)](https://registry.hub.docker.com/u/lambda3/azure-pipelines-agent-windows)
-[![Stars on Docker Hub](https://img.shields.io/docker/stars/lambda3/azure-pipelines-agent-windows.svg)](https://registry.hub.docker.com/u/lambda3/azure-pipelines-agent-windows) [![](https://images.microbadger.com/badges/image/lambda3/azure-pipelines-agent-windows.svg)](https://microbadger.com/images/lambda3/azure-pipelines-agent-windows "Get your own image badge on microbadger.com")
-[![Build
-Status](https://dev.azure.com/lambda3foss/docker-azure-pipelines-agent-windows/_apis/build/status/Lambda3.docker-azure-pipelines-agent-windows?branchName=master)](https://dev.azure.com/lambda3foss/docker-azure-pipelines-agent-windows/_build/latest?definitionId=1&branchName=master)
+[![Build](https://github.com/lambda3/docker-azure-pipelines-agent-windows/actions/workflows/build.yml/badge.svg?branch=main)](https://github.com/Lambda3/docker-azure-pipelines-agent-windows/actions/workflows/build.yml)
 
 ## Supported tags
 
@@ -19,9 +17,9 @@ Status](https://dev.azure.com/lambda3foss/docker-azure-pipelines-agent-windows/_
 
 You need to set these environment variables:
 
-* `AGENT_PAT` - The personal access token from Azure Pipelines. Required.
-* `VS_TENANT` - The Azure Pipelines tenant, a.k.a. the value that goes before .visualstudio.com, i.e., on foo.visualstudio.com, should be `foo`. Required.
-* `AGENT_POOL` - The agent pool. Optional. Default value: `Default`
+- `AGENT_PAT` - The personal access token from Azure Pipelines. Required.
+- `VS_TENANT` - The Azure Pipelines tenant, a.k.a. the value that goes before .visualstudio.com, i.e., on foo.visualstudio.com, should be `foo`. Required.
+- `AGENT_POOL` - The agent pool. Optional. Default value: `Default`
 
 ## Running
 
@@ -59,7 +57,7 @@ See [this example](https://github.com/Lambda3/docker-azure-pipelines-agent-windo
 
 ## Maintainers
 
-* [Giovanni Bassi](http://blog.lambda3.com.br/L3/giovannibassi/), aka Giggio, [Lambda3](http://www.lambda3.com.br), [@giovannibassi](https://twitter.com/giovannibassi)
+- [Giovanni Bassi](http://blog.lambda3.com.br/L3/giovannibassi/), aka Giggio, [Lambda3](http://www.lambda3.com.br), [@giovannibassi](https://twitter.com/giovannibassi)
 
 ## License
 

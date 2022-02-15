@@ -35,7 +35,7 @@ jobs:
         working-directory: .
         run: |
           docker login -u $env:DOCKER_USERNAME -p $env:DOCKER_PASSWORD
-          Invoke-Expression "docker build $($env:TAGS.Split("`n") | % { '-t "' + $_ + '"' }) $($env:LABELS.Split("`n") | % { '--label "' + $_ + '"' }) ./agent/"
+          Invoke-Expression "docker build --pull $($env:TAGS.Split("`n") | % { '-t "' + $_ + '"' }) $($env:LABELS.Split("`n") | % { '--label "' + $_ + '"' }) ./agent/"
           $($env:TAGS.Split("`n") | % { docker push $_ })
           docker logout
         env:
@@ -59,7 +59,7 @@ jobs:
         working-directory: .
         run: |
           docker login -u $env:DOCKER_USERNAME -p $env:DOCKER_PASSWORD
-          Invoke-Expression "docker build $($env:TAGS.Split("`n") | % { '-t "' + $_ + '"' }) $($env:LABELS.Split("`n") | % { '--label "' + $_ + '"' }) ./agent-docker/"
+          Invoke-Expression "docker build --pull $($env:TAGS.Split("`n") | % { '-t "' + $_ + '"' }) $($env:LABELS.Split("`n") | % { '--label "' + $_ + '"' }) ./agent-docker/"
           $($env:TAGS.Split("`n") | % { docker push $_ })
           docker logout
         env:

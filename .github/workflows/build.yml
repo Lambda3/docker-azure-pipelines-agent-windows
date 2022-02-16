@@ -3,14 +3,21 @@
 name: Publish Docker image
 
 on:
+  workflow_dispatch:
+  schedule:
+    - cron: "5 3 * * *"
   push:
     branches:
       - main
     tags:
       - "*"
+    paths-ignore:
+      - "**.md"
   pull_request:
     branches:
       - main
+    paths-ignore:
+      - "**.md"
 
 jobs:
   push_to_registry:
@@ -19,6 +26,15 @@ jobs:
     steps:
       - name: Check out the repo
         uses: actions/checkout@v2
+
+      - name: Check if update available
+        id: check
+        uses: giggio/docker-image-update-checker@v2
+        with:
+          base-image: mcr.microsoft.com/dotnet/framework/sdk:4.8-windowsservercore-ltsc2019
+          image: lambda3/azure-pipelines-agent-windows
+          os: windows
+          verbose: true
 
       - name: Extract metadata (tags, labels) for Docker (Latest image)
         id: meta_latest
@@ -30,19 +46,38 @@ jobs:
           tags: |
             type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
             type=ref,event=tag
+        if: success() && (contains(fromJson('["push", "pull_request"]'), github.event_name) || (steps.check.outputs.needs-updating == 'true' && github.event_name == 'schedule'))
 
-      - name: Build and push (latest)
+      - name: Build image (latest)
         working-directory: .
         run: |
+          $ErrorActionPreference = "Stop"
           docker login -u $env:DOCKER_USERNAME -p $env:DOCKER_PASSWORD
+          if ($LASTEXITCODE -ne 0) { throw "Command failed." }
           Invoke-Expression "docker build --pull $($env:TAGS.Split("`n") | % { '-t "' + $_ + '"' }) $($env:LABELS.Split("`n") | % { '--label "' + $_ + '"' }) ./agent/"
-          $($env:TAGS.Split("`n") | % { docker push $_ })
           docker logout
         env:
           DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
           DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
           TAGS: ${{ steps.meta_latest.outputs.tags }}
           LABELS: ${{ steps.meta_latest.outputs.labels }}
+        if: success() && (contains(fromJson('["push", "pull_request"]'), github.event_name) || (steps.check.outputs.needs-updating == 'true' && github.event_name == 'schedule'))
+
+      - name: Push image (latest)
+        run: |
+          $ErrorActionPreference = "Stop"
+          docker login -u $env:DOCKER_USERNAME -p $env:DOCKER_PASSWORD
+          if ($LASTEXITCODE -ne 0) { throw "Command failed." }
+          $($env:TAGS.Split("`n") | % {
+            docker push $_
+            if ($LASTEXITCODE -ne 0) { throw "Command failed." }
+          })
+          docker logout
+        env:
+          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+          TAGS: ${{ steps.meta_latest.outputs.tags }}
+        if: success() && (github.event_name == 'push' || (steps.check.outputs.needs-updating == 'true' && github.event_name == 'schedule'))
 
       - name: Extract metadata (tags, labels) for Docker (Docker image)
         id: meta_docker
@@ -54,16 +89,35 @@ jobs:
           tags: |
             type=raw,value=docker,enable=${{ github.ref == 'refs/heads/main' }}
             type=ref,suffix=-docker,event=tag
+        if: success() && (contains(fromJson('["push", "pull_request"]'), github.event_name) || (steps.check.outputs.needs-updating == 'true' && github.event_name == 'schedule'))
 
-      - name: Build and push (docker)
+      - name: Build image (docker)
         working-directory: .
         run: |
+          $ErrorActionPreference = "Stop"
           docker login -u $env:DOCKER_USERNAME -p $env:DOCKER_PASSWORD
+          if ($LASTEXITCODE -ne 0) { throw "Command failed." }
           Invoke-Expression "docker build --pull $($env:TAGS.Split("`n") | % { '-t "' + $_ + '"' }) $($env:LABELS.Split("`n") | % { '--label "' + $_ + '"' }) ./agent-docker/"
-          $($env:TAGS.Split("`n") | % { docker push $_ })
           docker logout
         env:
           DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
           DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
           TAGS: ${{ steps.meta_docker.outputs.tags }}
           LABELS: ${{ steps.meta_docker.outputs.labels }}
+        if: success() && (contains(fromJson('["push", "pull_request"]'), github.event_name) || (steps.check.outputs.needs-updating == 'true' && github.event_name == 'schedule'))
+
+      - name: Push image (docker)
+        run: |
+          $ErrorActionPreference = "Stop"
+          docker login -u $env:DOCKER_USERNAME -p $env:DOCKER_PASSWORD
+          if ($LASTEXITCODE -ne 0) { throw "Command failed." }
+          $($env:TAGS.Split("`n") | % {
+            docker push $_
+            if ($LASTEXITCODE -ne 0) { throw "Command failed." }
+          })
+          docker logout
+        env:
+          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+          TAGS: ${{ steps.meta_docker.outputs.tags }}
+        if: success() && (github.event_name == 'push' || (steps.check.outputs.needs-updating == 'true' && github.event_name == 'schedule'))

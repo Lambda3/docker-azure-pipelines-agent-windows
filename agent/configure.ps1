@@ -17,7 +17,7 @@ if (!(Test-Path $PSScriptRoot/.credentials))
   if (!(Test-Path $WORK_DIR)) {
     mkdir $WORK_DIR
   }
-  . $PSScriptRoot/bin/Agent.Listener configure --url https://dev.azure.com/$env:VS_TENANT --pool $env:AGENT_POOL --auth PAT --token $env:AGENT_PAT --agent $(hostname) --work $WORK_DIR --unattended
+  . $PSScriptRoot/bin/Agent.Listener configure --url https://dev.azure.com/$env:VS_TENANT --pool $env:AGENT_POOL --auth PAT --token $env:AGENT_PAT --agent $(hostname) --work $WORK_DIR --replace --unattended
   $retval = $LASTEXITCODE
   if ($retval -ne 0) {
     write-error "Return code was not zero but $retval"

@@ -4,6 +4,12 @@ name: Publish Docker image
 
 on:
   workflow_dispatch:
+    inputs:
+      skipUpdateCheck:
+        description: "Should skip checking if image needs update and always run the build steps"
+        required: false
+        default: false
+        type: boolean
   schedule:
     - cron: "5 3 * * *"
   push:
@@ -46,7 +52,7 @@ jobs:
           tags: |
             type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
             type=ref,event=tag
-        if: success() && (contains(fromJson('["push", "pull_request"]'), github.event_name) || (steps.check.outputs.needs-updating == 'true' && github.event_name == 'schedule'))
+        if: success() && (contains(fromJson('["push", "pull_request"]'), github.event_name) || (steps.check.outputs.needs-updating == 'true' && github.event_name == 'schedule') || github.event.inputs.environment.skipUpdateCheck == 'true')
 
       - name: Build image (latest)
         working-directory: .
@@ -61,7 +67,7 @@ jobs:
           DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
           TAGS: ${{ steps.meta_latest.outputs.tags }}
           LABELS: ${{ steps.meta_latest.outputs.labels }}
-        if: success() && (contains(fromJson('["push", "pull_request"]'), github.event_name) || (steps.check.outputs.needs-updating == 'true' && github.event_name == 'schedule'))
+        if: success() && (contains(fromJson('["push", "pull_request"]'), github.event_name) || (steps.check.outputs.needs-updating == 'true' && github.event_name == 'schedule') || github.event.inputs.environment.skipUpdateCheck == 'true')
 
       - name: Push image (latest)
         run: |
@@ -77,7 +83,7 @@ jobs:
           DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
           DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
           TAGS: ${{ steps.meta_latest.outputs.tags }}
-        if: success() && (github.event_name == 'push' || (steps.check.outputs.needs-updating == 'true' && github.event_name == 'schedule'))
+        if: success() && (github.event_name == 'push' || (steps.check.outputs.needs-updating == 'true' && github.event_name == 'schedule') || github.event.inputs.environment.skipUpdateCheck == 'true')
 
       - name: Extract metadata (tags, labels) for Docker (Docker image)
         id: meta_docker
@@ -89,7 +95,7 @@ jobs:
           tags: |
             type=raw,value=docker,enable=${{ github.ref == 'refs/heads/main' }}
             type=ref,suffix=-docker,event=tag
-        if: success() && (contains(fromJson('["push", "pull_request"]'), github.event_name) || (steps.check.outputs.needs-updating == 'true' && github.event_name == 'schedule'))
+        if: success() && (contains(fromJson('["push", "pull_request"]'), github.event_name) || (steps.check.outputs.needs-updating == 'true' && github.event_name == 'schedule') || github.event.inputs.environment.skipUpdateCheck == 'true')
 
       - name: Build image (docker)
         working-directory: .
@@ -104,7 +110,7 @@ jobs:
           DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
           TAGS: ${{ steps.meta_docker.outputs.tags }}
           LABELS: ${{ steps.meta_docker.outputs.labels }}
-        if: success() && (contains(fromJson('["push", "pull_request"]'), github.event_name) || (steps.check.outputs.needs-updating == 'true' && github.event_name == 'schedule'))
+        if: success() && (contains(fromJson('["push", "pull_request"]'), github.event_name) || (steps.check.outputs.needs-updating == 'true' && github.event_name == 'schedule') || github.event.inputs.environment.skipUpdateCheck == 'true')
 
       - name: Push image (docker)
         run: |
@@ -120,4 +126,4 @@ jobs:
           DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
           DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
           TAGS: ${{ steps.meta_docker.outputs.tags }}
-        if: success() && (github.event_name == 'push' || (steps.check.outputs.needs-updating == 'true' && github.event_name == 'schedule'))
+        if: success() && (github.event_name == 'push' || (steps.check.outputs.needs-updating == 'true' && github.event_name == 'schedule') || github.event.inputs.environment.skipUpdateCheck == 'true')

@@ -108,6 +108,8 @@ RUN $releases = Invoke-RestMethod https://api.github.com/repos/microsoft/azure-p
     [System.IO.Compression.ZipFile]::ExtractToDirectory('agent.zip', \"$PWD\"); `
     Remove-Item agent.zip
 COPY *.ps1 c:\agent\
+COPY _vimrc C:\Users\ContainerAdministrator\
+COPY _vimrc C:\Users\agentuser\
 RUN $acl = Get-Acl c:\agent\; `
     $acl.SetOwner([System.Security.Principal.NTAccount] 'agentuser'); `
     get-childitem -File c:\agent\ | % { Set-Acl -Path $_ -AclObject $acl }; `

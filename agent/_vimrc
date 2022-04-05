@@ -1,0 +1,4 @@
+set backupdir=$TEMP
+set directory=$TEMP
+set nobackup
+set nowritebackup

@@ -1,11 +1,20 @@
 # escape=`
-FROM mcr.microsoft.com/dotnet/framework/sdk:4.8-windowsservercore-ltsc2019
-
+FROM mcr.microsoft.com/dotnet/framework/sdk:4.8-windowsservercore-ltsc2019 as base
 LABEL maintainer="giggio@giggio.net"
 SHELL ["powershell.exe", "-NoLogo", "-Command"]
+#users
+WORKDIR c:\agent
+RUN net user /add agentuser
 #choco
 RUN Set-ExecutionPolicy Bypass -Scope Process -Force; iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1')); `
     [Environment]::SetEnvironmentVariable('PATH', \"$env:ProgramData\chocolatey\bin\;$env:PATH\", [EnvironmentVariableTarget]::Machine)
+
+FROM base as ancm
+# (ANCM) ASP.NET Core 6.0 Runtime - Windows Hosting Bundle Installer (https://docs.microsoft.com/en-us/aspnet/core/host-and-deploy/aspnet-core-module)
+RUN Install-WindowsFeature -name Web-Server,Web-Asp-Net45;
+RUN choco install --no-progress -y dotnet-aspnetcoremodule-v2
+
+FROM base
 # node, npm:
 RUN choco install --no-progress -y nodejs.install
 # pwsh, auto download latest release
@@ -19,9 +28,13 @@ RUN $releases = Invoke-RestMethod https://api.github.com/repos/PowerShell/PowerS
     Remove-Item pwsh.msi; `
     [Environment]::SetEnvironmentVariable('PATH', \"$env:ProgramFiles\PowerShell\7\;$env:PATH\", [EnvironmentVariableTarget]::Machine)
 SHELL ["pwsh.exe", "-NoLogo", "-Command"]
-#users
-WORKDIR c:\agent
-RUN net user /add agentuser
+# iis express
+RUN choco install --no-progress -y iisexpress;
+RUN mkdir \"$env:ProgramFiles/IIS Express/Asp.Net Core Module/\"; `
+    mkdir \"${env:ProgramFiles(x86)}/IIS Express/Asp.Net Core Module/\"
+COPY --from=ancm  [ "C:/Program Files (x86)/IIS/Asp.Net Core Module/", "C:/Program Files (x86)/IIS Express/Asp.Net Core Module/" ]
+COPY --from=ancm  [ "C:/Program Files/IIS/Asp.Net Core Module/", "C:/Program Files/IIS Express/Asp.Net Core Module/" ]
+
 # VS build tools
 # See: https://docs.microsoft.com/visualstudio/install/build-tools-container
 # See commandline: https://docs.microsoft.com/visualstudio/install/use-command-line-parameters-to-install-visual-studio
@@ -53,12 +66,14 @@ RUN Invoke-WebRequest https://dot.net/v1/dotnet-install.ps1 -OutFile dotnet-inst
     .\dotnet-install.ps1 -Channel 5.0 -InstallDir $env:ProgramFiles\dotnet; `
     [Environment]::SetEnvironmentVariable('PATH', \"$HOME\.dotnet\tools;$env:PATH\", [EnvironmentVariableTarget]::Machine); `
     Remove-Item dotnet-install.ps1
+# (ANCM) ASP.NET Core 6.0 Runtime - Windows Hosting Bundle Installer (https://docs.microsoft.com/en-us/aspnet/core/host-and-deploy/aspnet-core-module)
+RUN Invoke-WebRequest -OutFile dotnet-hosting.exe -Uri https://download.visualstudio.microsoft.com/download/pr/ae1014c7-a005-4a0e-9062-b6f3056ded09/da5d731f5ead9e385427a77412b88fb0/dotnet-hosting-6.0.5-win.exe
 # az cli:
 RUN Invoke-WebRequest -Uri https://aka.ms/installazurecliwindows -OutFile .\AzureCLI.msi; `
     Start-Process msiexec.exe -Wait -ArgumentList '/I AzureCLI.msi /quiet'; `
     Remove-Item AzureCLI.msi
 # kubectl, helm, terraform, git, iis express, yarn:
-RUN choco install --no-progress -y kubernetes-cli kubernetes-helm terraform git.install iisexpress yarn nvm.portable
+RUN choco install --no-progress -y kubernetes-cli kubernetes-helm terraform git.install yarn nvm.portable
 # chrome, ignores checksum because they cannot be safely verified
 RUN choco install --no-progress --ignore-checksum -y GoogleChrome
 # openjdk

@@ -6,7 +6,12 @@ on:
   workflow_dispatch:
     inputs:
       skipUpdateCheck:
-        description: "Should skip checking if image needs update and always run the build steps"
+        description: "Skip checking if image needs update and always run the build steps"
+        required: false
+        default: false
+        type: boolean
+      push:
+        description: "Push to docker hub"
         required: false
         default: false
         type: boolean
@@ -14,16 +19,22 @@ on:
     - cron: "5 3 * * *"
   push:
     branches:
-      - main
+      - "*"
     tags:
       - "*"
     paths-ignore:
       - "**.md"
+      - "**.txt"
+      - ".gitattribute"
+      - ".gitignore"
   pull_request:
     branches:
-      - main
+      - "*"
     paths-ignore:
       - "**.md"
+      - "**.txt"
+      - ".gitattribute"
+      - ".gitignore"
 
 jobs:
   push_to_registry:
@@ -41,89 +52,88 @@ jobs:
           image: lambda3/azure-pipelines-agent-windows
           os: windows
           verbose: true
+        if: ${{ github.event_name == 'schedule' }}
 
       - name: Extract metadata (tags, labels) for Docker (Latest image)
         id: meta_latest
-        uses: docker/metadata-action@v3
+        uses: docker/metadata-action@v4
         with:
           images: lambda3/azure-pipelines-agent-windows
           flavor: |
             latest=false
           tags: |
             type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
+            type=ref,event=branch,enable=${{ github.ref != 'refs/heads/main' }}
             type=ref,event=tag
-        if: success() && (contains(fromJson('["push", "pull_request"]'), github.event_name) || (steps.check.outputs.needs-updating == 'true' && github.event_name == 'schedule') || github.event.inputs.environment.skipUpdateCheck == 'true')
+        if: ${{ success() && (contains(fromJson('["push", "pull_request"]'), github.event_name) || (steps.check.outputs.needs-updating && github.event_name == 'schedule') || (inputs.skipUpdateCheck && github.event_name == 'workflow_dispatch')) }}
 
       - name: Build image (latest)
-        working-directory: .
+        working-directory: ./agent/
         run: |
           $ErrorActionPreference = "Stop"
-          docker login -u $env:DOCKER_USERNAME -p $env:DOCKER_PASSWORD
-          if ($LASTEXITCODE -ne 0) { throw "Command failed." }
-          Invoke-Expression "docker build --pull $($env:TAGS.Split("`n") | % { '-t "' + $_ + '"' }) $($env:LABELS.Split("`n") | % { '--label "' + $_ + '"' }) ./agent/"
-          docker logout
+          Invoke-Expression "docker build --pull $($env:TAGS.Split("`n") | % { '-t "' + $_ + '"' }) $($env:LABELS.Split("`n") | % { '--label "' + $_ + '"' }) ."
+          if ($LASTEXITCODE -ne 0) { throw "Docker build failed." }
         env:
-          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
-          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
           TAGS: ${{ steps.meta_latest.outputs.tags }}
           LABELS: ${{ steps.meta_latest.outputs.labels }}
-        if: success() && (contains(fromJson('["push", "pull_request"]'), github.event_name) || (steps.check.outputs.needs-updating == 'true' && github.event_name == 'schedule') || github.event.inputs.environment.skipUpdateCheck == 'true')
-
-      - name: Push image (latest)
-        run: |
-          $ErrorActionPreference = "Stop"
-          docker login -u $env:DOCKER_USERNAME -p $env:DOCKER_PASSWORD
-          if ($LASTEXITCODE -ne 0) { throw "Command failed." }
-          $($env:TAGS.Split("`n") | % {
-            docker push $_
-            if ($LASTEXITCODE -ne 0) { throw "Command failed." }
-          })
-          docker logout
-        env:
-          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
-          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
-          TAGS: ${{ steps.meta_latest.outputs.tags }}
-        if: success() && (github.event_name == 'push' || (steps.check.outputs.needs-updating == 'true' && github.event_name == 'schedule') || github.event.inputs.environment.skipUpdateCheck == 'true')
+        if: ${{ success() && (contains(fromJson('["push", "pull_request"]'), github.event_name) || (steps.check.outputs.needs-updating && github.event_name == 'schedule') || (inputs.skipUpdateCheck && github.event_name == 'workflow_dispatch')) }}
 
       - name: Extract metadata (tags, labels) for Docker (Docker image)
         id: meta_docker
-        uses: docker/metadata-action@v3
+        uses: docker/metadata-action@v4
         with:
           images: lambda3/azure-pipelines-agent-windows
           flavor: |
             latest=false
           tags: |
             type=raw,value=docker,enable=${{ github.ref == 'refs/heads/main' }}
+            type=ref,suffix=-docker,event=branch,enable=${{ github.ref != 'refs/heads/main' }}
             type=ref,suffix=-docker,event=tag
-        if: success() && (contains(fromJson('["push", "pull_request"]'), github.event_name) || (steps.check.outputs.needs-updating == 'true' && github.event_name == 'schedule') || github.event.inputs.environment.skipUpdateCheck == 'true')
+        if: ${{ success() && (contains(fromJson('["push", "pull_request"]'), github.event_name) || (steps.check.outputs.needs-updating && github.event_name == 'schedule') || (inputs.skipUpdateCheck && github.event_name == 'workflow_dispatch')) }}
 
       - name: Build image (docker)
-        working-directory: .
+        working-directory: ./agent-docker/
         run: |
           $ErrorActionPreference = "Stop"
-          docker login -u $env:DOCKER_USERNAME -p $env:DOCKER_PASSWORD
-          if ($LASTEXITCODE -ne 0) { throw "Command failed." }
-          Invoke-Expression "docker build --pull $($env:TAGS.Split("`n") | % { '-t "' + $_ + '"' }) $($env:LABELS.Split("`n") | % { '--label "' + $_ + '"' }) ./agent-docker/"
-          docker logout
+          Invoke-Expression "docker build --pull $($env:TAGS.Split("`n") | % { '-t "' + $_ + '"' }) $($env:LABELS.Split("`n") | % { '--label "' + $_ + '"' }) ."
+          if ($LASTEXITCODE -ne 0) { throw "Docker build failed." }
         env:
-          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
-          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
           TAGS: ${{ steps.meta_docker.outputs.tags }}
           LABELS: ${{ steps.meta_docker.outputs.labels }}
-        if: success() && (contains(fromJson('["push", "pull_request"]'), github.event_name) || (steps.check.outputs.needs-updating == 'true' && github.event_name == 'schedule') || github.event.inputs.environment.skipUpdateCheck == 'true')
+        if: ${{ success() && (contains(fromJson('["push", "pull_request"]'), github.event_name) || (steps.check.outputs.needs-updating && github.event_name == 'schedule') || (inputs.skipUpdateCheck && github.event_name == 'workflow_dispatch')) }}
+
+      - name: Docker login
+        id: docker_login
+        run: |
+          $ErrorActionPreference = "Stop"
+          docker login -u lambdatres -p $env:DOCKER_PASSWORD
+          if ($LASTEXITCODE -ne 0) { throw "Docker login failed." }
+        env:
+          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+        if: ${{ success() && (github.event_name == 'push' || (steps.check.outputs.needs-updating && github.event_name == 'schedule') || (inputs.skipUpdateCheck && github.event_name == 'workflow_dispatch')) }}
+
+      - name: Push image (latest)
+        run: |
+          $ErrorActionPreference = "Stop"
+          $($env:TAGS.Split("`n") | % {
+            docker push $_
+            if ($LASTEXITCODE -ne 0) { throw "Docker push failed." }
+          })
+        env:
+          TAGS: ${{ steps.meta_latest.outputs.tags }}
+        if: ${{ success() && ((github.event_name == 'push' && github.ref == 'refs/heads/main') || (steps.check.outputs.needs-updating && github.event_name == 'schedule') || (inputs.skipUpdateCheck && inputs.push && github.event_name == 'workflow_dispatch')) }}
 
       - name: Push image (docker)
         run: |
           $ErrorActionPreference = "Stop"
-          docker login -u $env:DOCKER_USERNAME -p $env:DOCKER_PASSWORD
-          if ($LASTEXITCODE -ne 0) { throw "Command failed." }
           $($env:TAGS.Split("`n") | % {
             docker push $_
-            if ($LASTEXITCODE -ne 0) { throw "Command failed." }
+            if ($LASTEXITCODE -ne 0) { throw "Docker push failed." }
           })
-          docker logout
         env:
-          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
-          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
           TAGS: ${{ steps.meta_docker.outputs.tags }}
-        if: success() && (github.event_name == 'push' || (steps.check.outputs.needs-updating == 'true' && github.event_name == 'schedule') || github.event.inputs.environment.skipUpdateCheck == 'true')
+        if: ${{ success() && ((github.event_name == 'push' && github.ref == 'refs/heads/main') || (steps.check.outputs.needs-updating && github.event_name == 'schedule') || (inputs.skipUpdateCheck && inputs.push && github.event_name == 'workflow_dispatch')) }}
+
+      - name: Docker logout
+        run: docker logout
+        if: ${{ always() && steps.docker_login.outcome != 'skipped' }}

@@ -95,7 +95,7 @@ jobs:
         working-directory: ./agent-docker/
         run: |
           $ErrorActionPreference = "Stop"
-          Invoke-Expression "docker build $($env:TAGS.Split("`n") | % { '-t "' + $_ + '"' }) $($env:LABELS.Split("`n") | % { '--label "' + $_ + '"' }) ."
+          Invoke-Expression "docker build --build-arg FROM=${{ steps.meta_latest.outputs.tags }} $($env:TAGS.Split("`n") | % { '-t "' + $_ + '"' }) $($env:LABELS.Split("`n") | % { '--label "' + $_ + '"' }) ."
           if ($LASTEXITCODE -ne 0) { throw "Docker build failed." }
         env:
           TAGS: ${{ steps.meta_docker.outputs.tags }}

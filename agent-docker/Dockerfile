@@ -1,5 +1,6 @@
 # escape=`
-FROM lambda3/azure-pipelines-agent-windows
+ARG FROM=lambda3/azure-pipelines-agent-windows:latest
+FROM ${FROM}
 
 USER containeradministrator
 COPY *.ps1 c:\agent\

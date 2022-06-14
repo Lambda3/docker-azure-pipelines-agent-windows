@@ -21,8 +21,8 @@ if ($releaseTag -match 'v(\d+\.\d+\.\d+)') {
     exit 1
 }
 Write-Output "Writing git tag $version..."
-git tag -s $releaseTag -m $releaseTag
+git tag -s $version -m $version
 if ($LASTEXITCODE -ne 0) {
-    Write-Output "Failed to write git tag $releaseTag"
+    Write-Output "Failed to write git tag $version"
     exit 1
 }

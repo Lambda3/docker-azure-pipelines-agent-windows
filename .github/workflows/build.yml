@@ -65,7 +65,7 @@ jobs:
             type=raw,value=latest,enable=${{ github.ref == 'refs/heads/latest' }}
             type=ref,event=branch,enable=${{ github.ref != 'refs/heads/latest' }}
             type=ref,event=tag
-        if: ${{ success() && (contains(fromJson('["push", "pull_request"]'), github.event_name) || (steps.check.outputs.needs-updating && github.event_name == 'schedule') || (inputs.skipUpdateCheck && github.event_name == 'workflow_dispatch')) }}
+        if: ${{ success() && (contains(fromJson('["push", "pull_request"]'), github.event_name) || (steps.check.outputs.needs-updating == 'true' && github.event_name == 'schedule') || (inputs.skipUpdateCheck && github.event_name == 'workflow_dispatch')) }}
 
       - name: Build image (latest)
         working-directory: ./agent/
@@ -76,7 +76,7 @@ jobs:
         env:
           TAGS: ${{ steps.meta_latest.outputs.tags }}
           LABELS: ${{ steps.meta_latest.outputs.labels }}
-        if: ${{ success() && (contains(fromJson('["push", "pull_request"]'), github.event_name) || (steps.check.outputs.needs-updating && github.event_name == 'schedule') || (inputs.skipUpdateCheck && github.event_name == 'workflow_dispatch')) }}
+        if: ${{ success() && (contains(fromJson('["push", "pull_request"]'), github.event_name) || (steps.check.outputs.needs-updating == 'true' && github.event_name == 'schedule') || (inputs.skipUpdateCheck && github.event_name == 'workflow_dispatch')) }}
 
       - name: Extract metadata (tags, labels) for Docker (Docker image)
         id: meta_docker
@@ -89,7 +89,7 @@ jobs:
             type=raw,value=docker,enable=${{ github.ref == 'refs/heads/latest' }}
             type=ref,suffix=-docker,event=branch,enable=${{ github.ref != 'refs/heads/latest' }}
             type=ref,suffix=-docker,event=tag
-        if: ${{ success() && (contains(fromJson('["push", "pull_request"]'), github.event_name) || (steps.check.outputs.needs-updating && github.event_name == 'schedule') || (inputs.skipUpdateCheck && github.event_name == 'workflow_dispatch')) }}
+        if: ${{ success() && (contains(fromJson('["push", "pull_request"]'), github.event_name) || (steps.check.outputs.needs-updating == 'true' && github.event_name == 'schedule') || (inputs.skipUpdateCheck && github.event_name == 'workflow_dispatch')) }}
 
       - name: Build image (docker)
         working-directory: ./agent-docker/
@@ -100,7 +100,7 @@ jobs:
         env:
           TAGS: ${{ steps.meta_docker.outputs.tags }}
           LABELS: ${{ steps.meta_docker.outputs.labels }}
-        if: ${{ success() && (contains(fromJson('["push", "pull_request"]'), github.event_name) || (steps.check.outputs.needs-updating && github.event_name == 'schedule') || (inputs.skipUpdateCheck && github.event_name == 'workflow_dispatch')) }}
+        if: ${{ success() && (contains(fromJson('["push", "pull_request"]'), github.event_name) || (steps.check.outputs.needs-updating == 'true' && github.event_name == 'schedule') || (inputs.skipUpdateCheck && github.event_name == 'workflow_dispatch')) }}
 
       - name: Docker login
         id: docker_login
@@ -110,7 +110,7 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw "Docker login failed." }
         env:
           DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
-        if: ${{ success() && ((github.event_name == 'push' && (github.ref == 'refs/heads/latest' || startsWith(github.ref, 'refs/tags/'))) || (steps.check.outputs.needs-updating && github.event_name == 'schedule') || (inputs.skipUpdateCheck && inputs.push && github.event_name == 'workflow_dispatch')) }}
+        if: ${{ success() && ((github.event_name == 'push' && (github.ref == 'refs/heads/latest' || startsWith(github.ref, 'refs/tags/'))) || (steps.check.outputs.needs-updating == 'true' && github.event_name == 'schedule') || (inputs.skipUpdateCheck && inputs.push && github.event_name == 'workflow_dispatch')) }}
 
       - name: Push image (latest)
         run: |
@@ -121,7 +121,7 @@ jobs:
           })
         env:
           TAGS: ${{ steps.meta_latest.outputs.tags }}
-        if: ${{ success() && ((github.event_name == 'push' && (github.ref == 'refs/heads/latest' || startsWith(github.ref, 'refs/tags/'))) || (steps.check.outputs.needs-updating && github.event_name == 'schedule') || (inputs.skipUpdateCheck && inputs.push && github.event_name == 'workflow_dispatch')) }}
+        if: ${{ success() && ((github.event_name == 'push' && (github.ref == 'refs/heads/latest' || startsWith(github.ref, 'refs/tags/'))) || (steps.check.outputs.needs-updating == 'true' && github.event_name == 'schedule') || (inputs.skipUpdateCheck && inputs.push && github.event_name == 'workflow_dispatch')) }}
 
       - name: Push image (docker)
         run: |
@@ -132,7 +132,7 @@ jobs:
           })
         env:
           TAGS: ${{ steps.meta_docker.outputs.tags }}
-        if: ${{ success() && ((github.event_name == 'push' && (github.ref == 'refs/heads/latest' || startsWith(github.ref, 'refs/tags/'))) || (steps.check.outputs.needs-updating && github.event_name == 'schedule') || (inputs.skipUpdateCheck && inputs.push && github.event_name == 'workflow_dispatch')) }}
+        if: ${{ success() && ((github.event_name == 'push' && (github.ref == 'refs/heads/latest' || startsWith(github.ref, 'refs/tags/'))) || (steps.check.outputs.needs-updating == 'true' && github.event_name == 'schedule') || (inputs.skipUpdateCheck && inputs.push && github.event_name == 'workflow_dispatch')) }}
 
       - name: Docker logout
         run: docker logout

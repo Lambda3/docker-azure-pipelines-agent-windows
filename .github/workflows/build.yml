@@ -43,6 +43,12 @@ jobs:
     steps:
       - name: Check out the repo
         uses: actions/checkout@v2
+        if: ${{ github.event_name != 'schedule' }}
+      - name: Check out the latest branch
+        uses: actions/checkout@v2
+        with:
+          ref: latest
+        if: ${{ github.event_name == 'schedule' }}
 
       - name: Check if update available
         id: check
@@ -62,8 +68,8 @@ jobs:
           flavor: |
             latest=false
           tags: |
-            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/latest' }}
-            type=ref,event=branch,enable=${{ github.ref != 'refs/heads/latest' }}
+            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/latest' || github.event_name == 'schedule' }}
+            type=ref,event=branch,enable=${{ github.ref != 'refs/heads/latest' && github.event_name != 'schedule' }}
             type=ref,event=tag
         if: ${{ success() && (contains(fromJson('["push", "pull_request"]'), github.event_name) || (steps.check.outputs.needs-updating == 'true' && github.event_name == 'schedule') || (inputs.skipUpdateCheck && github.event_name == 'workflow_dispatch')) }}
 
@@ -86,8 +92,8 @@ jobs:
           flavor: |
             latest=false
           tags: |
-            type=raw,value=docker,enable=${{ github.ref == 'refs/heads/latest' }}
-            type=ref,suffix=-docker,event=branch,enable=${{ github.ref != 'refs/heads/latest' }}
+            type=raw,value=docker,enable=${{ github.ref == 'refs/heads/latest' || github.event_name == 'schedule' }}
+            type=ref,suffix=-docker,event=branch,enable=${{ github.ref != 'refs/heads/latest' && github.event_name != 'schedule' }}
             type=ref,suffix=-docker,event=tag
         if: ${{ success() && (contains(fromJson('["push", "pull_request"]'), github.event_name) || (steps.check.outputs.needs-updating == 'true' && github.event_name == 'schedule') || (inputs.skipUpdateCheck && github.event_name == 'workflow_dispatch')) }}
 

@@ -19,7 +19,7 @@ on:
     - cron: "5 3 * * *"
   push:
     branches:
-      - "*"
+      - "**"
     tags:
       - "*"
     paths-ignore:
@@ -31,7 +31,14 @@ on:
 jobs:
   push_to_registry:
     name: Push Docker image to Docker Hub
-    runs-on: windows-2019
+    strategy:
+      fail-fast: false
+      matrix:
+        year: ["2019"]
+    runs-on: [self-hosted, Windows, X64]
+    outputs:
+      meta_latest_tags: ${{ steps.meta_latest.outputs.tags }}
+      meta_docker_tags: ${{ steps.meta_docker.outputs.tags }}
     steps:
       - name: Check out the repo
         uses: actions/checkout@v2
@@ -46,7 +53,7 @@ jobs:
         id: check
         uses: giggio/docker-image-update-checker@v2
         with:
-          base-image: mcr.microsoft.com/dotnet/framework/sdk:4.8-windowsservercore-ltsc2019
+          base-image: mcr.microsoft.com/dotnet/framework/sdk:4.8-windowsservercore-ltsc${{ matrix.year }}
           image: lambda3/azure-pipelines-agent-windows
           os: windows
           verbose: true
@@ -69,7 +76,7 @@ jobs:
         working-directory: ./agent/
         run: |
           $ErrorActionPreference = "Stop"
-          Invoke-Expression "docker build --pull $($env:TAGS.Split("`n") | % { '-t "' + $_ + '"' }) $($env:LABELS.Split("`n") | % { '--label "' + $_ + '"' }) ."
+          Invoke-Expression "docker build --network lan_net --isolation process --build-arg LTSC_YEAR=${{ matrix.year }} --pull $($env:TAGS.Split("`n") | % { '-t "' + $_ + '-windowsservercore-ltsc${{ matrix.year }}"' }) $($env:LABELS.Split("`n") | % { '--label "' + $_ + '"' }) ."
           if ($LASTEXITCODE -ne 0) { throw "Docker build failed." }
         env:
           TAGS: ${{ steps.meta_latest.outputs.tags }}
@@ -93,7 +100,8 @@ jobs:
         working-directory: ./agent-docker/
         run: |
           $ErrorActionPreference = "Stop"
-          Invoke-Expression "docker build --build-arg FROM=${{ steps.meta_latest.outputs.tags }} $($env:TAGS.Split("`n") | % { '-t "' + $_ + '"' }) $($env:LABELS.Split("`n") | % { '--label "' + $_ + '"' }) ."
+          # Get-Content C:\ProgramData\docker\config\daemon.json
+          Invoke-Expression "docker build --network lan_net --isolation process --build-arg FROM=${{ steps.meta_latest.outputs.tags }}-windowsservercore-ltsc${{ matrix.year }} $($env:TAGS.Split("`n") | % { '-t "' + $_ + '-windowsservercore-ltsc${{ matrix.year }}"' }) $($env:LABELS.Split("`n") | % { '--label "' + $_ + '"' }) ."
           if ($LASTEXITCODE -ne 0) { throw "Docker build failed." }
         env:
           TAGS: ${{ steps.meta_docker.outputs.tags }}
@@ -114,9 +122,10 @@ jobs:
         run: |
           $ErrorActionPreference = "Stop"
           $($env:TAGS.Split("`n") | % {
-            docker push $_
+            docker push $_-windowsservercore-ltsc${{ matrix.year }}
             if ($LASTEXITCODE -ne 0) { throw "Docker push failed." }
           })
+          Write-Output "::set-output name=push_latest_${{ matrix.year }}::true"
         env:
           TAGS: ${{ steps.meta_latest.outputs.tags }}
         if: ${{ success() && ((github.event_name == 'push' && (github.ref == 'refs/heads/latest' || startsWith(github.ref, 'refs/tags/'))) || (steps.check.outputs.needs-updating == 'true' && github.event_name == 'schedule') || (inputs.skipUpdateCheck && inputs.push && github.event_name == 'workflow_dispatch')) }}
@@ -125,13 +134,64 @@ jobs:
         run: |
           $ErrorActionPreference = "Stop"
           $($env:TAGS.Split("`n") | % {
-            docker push $_
+            docker push $_-windowsservercore-ltsc${{ matrix.year }}
             if ($LASTEXITCODE -ne 0) { throw "Docker push failed." }
           })
+          Write-Output "::set-output name=push_docker_${{ matrix.year }}::true"
         env:
           TAGS: ${{ steps.meta_docker.outputs.tags }}
         if: ${{ success() && ((github.event_name == 'push' && (github.ref == 'refs/heads/latest' || startsWith(github.ref, 'refs/tags/'))) || (steps.check.outputs.needs-updating == 'true' && github.event_name == 'schedule') || (inputs.skipUpdateCheck && inputs.push && github.event_name == 'workflow_dispatch')) }}
 
+      - name: Docker logout
+        run: docker logout
+        if: ${{ always() && steps.docker_login.outcome != 'skipped' }}
+
+  push_manifest_latest:
+    name: Push Docker manifest to Docker Hub (latest)
+    runs-on: windows-latest
+    needs: push_to_registry
+    if: ${{ success() && (needs.push_to_registry.outputs.push_latest_2019 == 'true' || needs.push_to_registry.outputs.push_latest_2022 == 'true')}}
+    steps:
+      - name: Docker login
+        id: docker_login
+        run: |
+          $ErrorActionPreference = "Stop"
+          docker login -u lambdatres -p $env:DOCKER_PASSWORD
+          if ($LASTEXITCODE -ne 0) { throw "Docker login failed." }
+        env:
+          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+      - name: Push manifest (latest)
+        run: |
+          $env:DOCKER_CLI_EXPERIMENTAL='enabled'
+          docker manifest create $env:TAGS --amend $env:TAGS-windowsservercore-ltsc2019
+          docker manifest push $env:TAGS
+        env:
+          TAGS: ${{ needs.push_to_registry.outputs.meta_latest_tags }}
+      - name: Docker logout
+        run: docker logout
+        if: ${{ always() && steps.docker_login.outcome != 'skipped' }}
+
+  push_manifest_docker:
+    name: Push Docker manifest to Docker Hub (docker)
+    runs-on: windows-latest
+    needs: push_to_registry
+    if: ${{ success() && (needs.push_to_registry.outputs.push_docker_2019 == 'true' || needs.push_to_registry.outputs.push_docker_2022 == 'true')}}
+    steps:
+      - name: Docker login
+        id: docker_login
+        run: |
+          $ErrorActionPreference = "Stop"
+          docker login -u lambdatres -p $env:DOCKER_PASSWORD
+          if ($LASTEXITCODE -ne 0) { throw "Docker login failed." }
+        env:
+          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+      - name: Push manifest (docker)
+        run: |
+          $env:DOCKER_CLI_EXPERIMENTAL='enabled'
+          docker manifest create $env:TAGS --amend $env:TAGS-windowsservercore-ltsc2019
+          docker manifest push $env:TAGS
+        env:
+          TAGS: ${{ needs.push_to_registry.outputs.meta_docker_tags }}
       - name: Docker logout
         run: docker logout
         if: ${{ always() && steps.docker_login.outcome != 'skipped' }}

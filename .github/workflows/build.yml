@@ -27,14 +27,6 @@ on:
       - "**.txt"
       - ".gitattribute"
       - ".gitignore"
-  pull_request:
-    branches:
-      - "*"
-    paths-ignore:
-      - "**.md"
-      - "**.txt"
-      - ".gitattribute"
-      - ".gitignore"
 
 jobs:
   push_to_registry:

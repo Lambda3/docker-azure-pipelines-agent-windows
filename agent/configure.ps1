@@ -1,6 +1,8 @@
 #!/usr/bin/env pwsh
 $ErrorActionPreference = "Stop"
 
+$env:DOCKER_VERSION = $(docker --version)
+$env:DOCKER_COMPOSE_VERSION = $(docker-compose --version)
 if (!($env:AGENT_POOL)) { $env:AGENT_POOL='Default' }
 if (!($env:VS_TENANT)) {
   write-error 'Variable "VS_TENANT" is not set.'

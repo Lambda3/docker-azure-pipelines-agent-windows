@@ -98,4 +98,3 @@ RUN Copy-Item C:\Users\ContainerAdministrator\_vimrc c:\Users\agentuser\; `
     $acl.SetOwner([System.Security.Principal.NTAccount] 'agentuser'); `
     get-childitem -File c:\agent\ | % { Set-Acl -Path $_ -AclObject $acl }; `
     Set-Acl -Path c:\agent\ -AclObject $acl
-USER agentuser

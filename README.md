@@ -10,12 +10,19 @@ It will not work with Azure DevOps Server.
 
 ## Supported tags
 
-- [`latest` (*agent/Dockerfile*)](https://github.com/lambda3/docker-azure-pipelines-agent-windows/blob/master/agent/Dockerfile)
-- [`docker` (*agent-docker/Dockerfile*)](https://github.com/Lambda3/docker-azure-pipelines-agent-windows/blob/master/agent-docker/Dockerfile)
+- [`latest` (*agent/Dockerfile*)](https://github.com/lambda3/docker-azure-pipelines-agent-windows/blob/main/agent/Dockerfile)
+
+### Other tags
+
+- For a specific Windows Server Version (only 2019 at this time): `lambda3/azure-pipelines-agent-windows:windowsservercore-ltsc2019`
+- For a specific git tag (tag `1.2.3` in this example): `lambda3/azure-pipelines-agent-windows:1.2.3`
+- For a specific git tag on a specific Windows Server Version: `lambda3/azure-pipelines-agent-windows:1.2.3-windowsservercore-ltsc2019`
+- For a specific commit (only commits on `main` get tagged and pushed): `lambda3/azure-pipelines-agent-windows:95aeca1`
+- For the current `main` branch: `lambda3/azure-pipelines-agent-windows:main`
 
 ## Configuration
 
-You need to set these environment variables:
+You need/can to set these environment variables:
 
 - `AGENT_PAT` - The personal access token from Azure Pipelines. Required.
 - `VS_TENANT` - The Azure Pipelines tenant, a.k.a. the value that goes before .visualstudio.com, i.e., on foo.visualstudio.com, should be `foo`. Required.
@@ -49,11 +56,12 @@ you have to mount the Docker named pipe, and user the `docker` tag of this
 repository, like so:
 
 ````powershell
-docker run --name azure-pipelines-agent-windows -ti -v \\.\pipe\docker_engine:\\.\pipe\docker_engine -e VS_TENANT=$env:VS_TENANT -e AGENT_PAT=$env:AGENT_PAT -d -ti azure-pipelines-agent-windows:docker
+docker run --name azure-pipelines-agent-windows -ti -v \\.\pipe\docker_engine:\\.\pipe\docker_engine -e VS_TENANT=$env:VS_TENANT -e AGENT_PAT=$env:AGENT_PAT -d -ti azure-pipelines-agent-windows
 ````
 
-When using docker-compose you will need the full syntax to mount the named pipe.
-See [this example](https://github.com/Lambda3/docker-azure-pipelines-agent-windows/blob/master/agent-docker/docker-compose-image.yml).
+### With docker-compose
+
+See examples at the [examples](https://github.com/Lambda3/docker-azure-pipelines-agent-windows/blob/main/examples/)) folder.
 
 ## Maintainers
 
@@ -62,7 +70,7 @@ See [this example](https://github.com/Lambda3/docker-azure-pipelines-agent-windo
 ## License
 
 This software is open source, licensed under the Apache License, Version 2.0.
-See [LICENSE.txt](https://github.com/lambda3/azure-pipelines-agent-windows/blob/master/LICENSE.txt) for details.
+See [LICENSE.txt](https://github.com/lambda3/azure-pipelines-agent-windows/blob/main/LICENSE.txt) for details.
 Check out the terms of the license before you contribute, fork, copy or do anything
 with the code. If you decide to contribute you agree to grant copyright of all your contribution to this project, and agree to
 mention clearly if do not agree to these terms. Your work will be licensed with the project at Apache V2, along the rest of the code.

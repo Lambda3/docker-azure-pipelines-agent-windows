@@ -22,13 +22,15 @@ SHELL [ "pwsh.exe", "-NoLogo", "-Command", "$ErrorActionPreference='Stop';", "$P
 # See commandline: https://docs.microsoft.com/visualstudio/install/use-command-line-parameters-to-install-visual-studio
 # See workloads: https://docs.microsoft.com/en-us/visualstudio/install/workload-component-id-vs-community
 # original instalation executable for build tools: https://aka.ms/vs/17/release/vs_buildtools.exe
+# running in multiple RUNs to not hit the layer limit of 10GB
 RUN choco install --execution-timeout 7200 --no-progress -y visualstudio2022community --verbose --package-parameters `
     '--add Microsoft.VisualStudio.Workload.Azure `
     --add Microsoft.VisualStudio.Workload.ManagedDesktop `
     --add Microsoft.VisualStudio.Workload.NativeDesktop `
     --add Microsoft.VisualStudio.Workload.VisualStudioExtension `
-    --add Microsoft.VisualStudio.Workload.NetWeb `
-    --add Microsoft.VisualStudio.Workload.NetCrossPlat `
+    --add Microsoft.VisualStudio.Workload.NetWeb '
+RUN choco install --execution-timeout 7200 --no-progress -y visualstudio2022community --verbose --package-parameters `
+    '--add Microsoft.VisualStudio.Workload.NetCrossPlat `
     --add Microsoft.Component.NetFX.Native `
     --add Microsoft.VisualStudio.ComponentGroup.MSIX.Packaging `
     --add Microsoft.VisualStudio.ComponentGroup.UWP.Support	 `

@@ -29,7 +29,7 @@ RUN choco install --execution-timeout 7200 --no-progress -y visualstudio2022comm
     --add Microsoft.VisualStudio.Workload.NativeDesktop `
     --add Microsoft.VisualStudio.Workload.VisualStudioExtension `
     --add Microsoft.VisualStudio.Workload.NetWeb '
-RUN choco install --execution-timeout 7200 --no-progress -y visualstudio2022community --verbose --package-parameters `
+RUN choco install --execution-timeout 7200 --no-progress -y visualstudio2022community --verbose --force --package-parameters `
     '--add Microsoft.VisualStudio.Workload.NetCrossPlat `
     --add Microsoft.Component.NetFX.Native `
     --add Microsoft.VisualStudio.ComponentGroup.MSIX.Packaging `

@@ -5,6 +5,7 @@ LABEL maintainer="giggio@giggio.net"
 WORKDIR c:\agent
 #users
 RUN net user /add agentuser
+RUN net user agentuser /expires:never
 
 # just to create the user profile:
 USER agentuser

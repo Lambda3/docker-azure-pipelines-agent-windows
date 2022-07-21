@@ -23,19 +23,46 @@ SHELL [ "pwsh.exe", "-NoLogo", "-Command", "$ErrorActionPreference='Stop';", "$P
 # See workloads: https://docs.microsoft.com/en-us/visualstudio/install/workload-component-id-vs-community
 # original instalation executable for build tools: https://aka.ms/vs/17/release/vs_buildtools.exe
 # running in multiple RUNs to not hit the layer limit of 10GB
+# todo: remove ignore checksums, see: https://github.com/jberezanski/ChocolateyPackages/issues/131
 RUN choco install --execution-timeout 7200 --no-progress -y visualstudio2022community --verbose --package-parameters `
     '--add Microsoft.VisualStudio.Workload.Azure `
-    --add Microsoft.VisualStudio.Workload.ManagedDesktop `
-    --add Microsoft.VisualStudio.Workload.NativeDesktop `
-    --add Microsoft.VisualStudio.Workload.VisualStudioExtension `
-    --add Microsoft.VisualStudio.Workload.NetWeb '
-RUN choco install --execution-timeout 7200 --no-progress -y visualstudio2022community --verbose --force --package-parameters `
-    '--add Microsoft.VisualStudio.Workload.NetCrossPlat `
-    --add Microsoft.Component.NetFX.Native `
-    --add Microsoft.VisualStudio.ComponentGroup.MSIX.Packaging `
-    --add Microsoft.VisualStudio.ComponentGroup.UWP.Support	 `
-    --add Microsoft.VisualStudio.ComponentGroup.UWP.NetCoreAndStandard `
-    --add Microsoft.VisualStudio.Component.Windows10SDK.19041 '
+    --add Microsoft.VisualStudio.Workload.VisualStudioExtension '
+RUN $env:ChocolateyIgnoreChecksums = 'true'; `
+    Import-Module $Env:ChocolateyInstall\helpers\chocolateyInstaller.psm1; `
+    Import-Module $Env:ChocolateyInstall\extensions\chocolatey-visualstudio\*.psm1; `
+    Add-VisualStudioWorkload -PackageName visualstudio2022community -VisualStudioYear 2022 -ApplicableProducts Community -Verbose -Workload Microsoft.VisualStudio.Workload.ManagedDesktop;
+RUN $env:ChocolateyIgnoreChecksums = 'true'; `
+    Import-Module $Env:ChocolateyInstall\helpers\chocolateyInstaller.psm1; `
+    Import-Module $Env:ChocolateyInstall\extensions\chocolatey-visualstudio\*.psm1; `
+    Add-VisualStudioWorkload -PackageName visualstudio2022community -VisualStudioYear 2022 -ApplicableProducts Community -Verbose -Workload Microsoft.VisualStudio.Workload.NativeDesktop;
+RUN $env:ChocolateyIgnoreChecksums = 'true'; `
+    Import-Module $Env:ChocolateyInstall\helpers\chocolateyInstaller.psm1; `
+    Import-Module $Env:ChocolateyInstall\extensions\chocolatey-visualstudio\*.psm1; `
+    Add-VisualStudioWorkload -PackageName visualstudio2022community -VisualStudioYear 2022 -ApplicableProducts Community -Verbose -Workload Microsoft.VisualStudio.Workload.NetWeb;
+RUN $env:ChocolateyIgnoreChecksums = 'true'; `
+    Import-Module $Env:ChocolateyInstall\helpers\chocolateyInstaller.psm1; `
+    Import-Module $Env:ChocolateyInstall\extensions\chocolatey-visualstudio\*.psm1; `
+    Add-VisualStudioWorkload -PackageName visualstudio2022community -VisualStudioYear 2022 -ApplicableProducts Community -Verbose -Workload Microsoft.VisualStudio.Workload.NetCrossPlat;
+RUN $env:ChocolateyIgnoreChecksums = 'true'; `
+    Import-Module $Env:ChocolateyInstall\helpers\chocolateyInstaller.psm1; `
+    Import-Module $Env:ChocolateyInstall\extensions\chocolatey-visualstudio\*.psm1; `
+    Add-VisualStudioComponent -PackageName visualstudio2022community -VisualStudioYear 2022 -ApplicableProducts Community -Verbose -Component Microsoft.Component.NetFX.Native;
+RUN $env:ChocolateyIgnoreChecksums = 'true'; `
+    Import-Module $Env:ChocolateyInstall\helpers\chocolateyInstaller.psm1; `
+    Import-Module $Env:ChocolateyInstall\extensions\chocolatey-visualstudio\*.psm1; `
+    Add-VisualStudioComponent -PackageName visualstudio2022community -VisualStudioYear 2022 -ApplicableProducts Community -Verbose -Component Microsoft.VisualStudio.ComponentGroup.MSIX.Packaging;
+RUN $env:ChocolateyIgnoreChecksums = 'true'; `
+    Import-Module $Env:ChocolateyInstall\helpers\chocolateyInstaller.psm1; `
+    Import-Module $Env:ChocolateyInstall\extensions\chocolatey-visualstudio\*.psm1; `
+    Add-VisualStudioComponent -PackageName visualstudio2022community -VisualStudioYear 2022 -ApplicableProducts Community -Verbose -Component Microsoft.VisualStudio.ComponentGroup.UWP.Support;
+RUN $env:ChocolateyIgnoreChecksums = 'true'; `
+    Import-Module $Env:ChocolateyInstall\helpers\chocolateyInstaller.psm1; `
+    Import-Module $Env:ChocolateyInstall\extensions\chocolatey-visualstudio\*.psm1; `
+    Add-VisualStudioComponent -PackageName visualstudio2022community -VisualStudioYear 2022 -ApplicableProducts Community -Verbose -Component Microsoft.VisualStudio.ComponentGroup.UWP.NetCoreAndStandard;
+RUN $env:ChocolateyIgnoreChecksums = 'true'; `
+    Import-Module $Env:ChocolateyInstall\helpers\chocolateyInstaller.psm1; `
+    Import-Module $Env:ChocolateyInstall\extensions\chocolatey-visualstudio\*.psm1; `
+    Add-VisualStudioComponent -PackageName visualstudio2022community -VisualStudioYear 2022 -ApplicableProducts Community -Verbose -Component Microsoft.VisualStudio.Component.Windows10SDK.19041;
 # netcore 3.1 (6 is already installed)
 RUN Invoke-WebRequest https://dot.net/v1/dotnet-install.ps1 -OutFile dotnet-install.ps1; `
     .\dotnet-install.ps1 -Channel 3.1 -InstallDir $env:ProgramFiles\dotnet; `

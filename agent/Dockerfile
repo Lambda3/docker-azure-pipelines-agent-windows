@@ -16,7 +16,6 @@ USER ContainerAdministrator
 RUN powershell.exe -NoProfile -InputFormat None -ExecutionPolicy Bypass -Command "[System.Net.ServicePointManager]::SecurityProtocol = 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))"
 # pwsh
 RUN [ "choco", "install", "--no-progress", "-y", "powershell-core" ]
-SHELL [ "pwsh.exe", "-NoLogo", "-Command", "$ErrorActionPreference='Stop';", "$ProgressPreference='SilentlyContinue';" ]
 # VS tools
 # See: https://docs.microsoft.com/visualstudio/install/build-tools-container
 # See commandline: https://docs.microsoft.com/visualstudio/install/use-command-line-parameters-to-install-visual-studio
@@ -27,6 +26,8 @@ SHELL [ "pwsh.exe", "-NoLogo", "-Command", "$ErrorActionPreference='Stop';", "$P
 RUN choco install --execution-timeout 7200 --no-progress -y visualstudio2022community --verbose --package-parameters `
     '--add Microsoft.VisualStudio.Workload.Azure `
     --add Microsoft.VisualStudio.Workload.VisualStudioExtension '
+# set shell to powershell, needed for the Visual Studio cmdlets bellow to work
+SHELL [ "powershell.exe", "-NoLogo", "-Command", "$ErrorActionPreference='Stop';", "$ProgressPreference='SilentlyContinue';" ]
 RUN $env:ChocolateyIgnoreChecksums = 'true'; `
     Import-Module $Env:ChocolateyInstall\helpers\chocolateyInstaller.psm1; `
     Import-Module $Env:ChocolateyInstall\extensions\chocolatey-visualstudio\*.psm1; `
@@ -68,6 +69,8 @@ RUN Invoke-WebRequest https://dot.net/v1/dotnet-install.ps1 -OutFile dotnet-inst
     .\dotnet-install.ps1 -Channel 3.1 -InstallDir $env:ProgramFiles\dotnet; `
     [Environment]::SetEnvironmentVariable('PATH', \"$HOME\.dotnet\tools;$env:PATH\", [EnvironmentVariableTarget]::Machine); `
     Remove-Item dotnet-install.ps1
+# set shell to pwsh
+SHELL [ "pwsh.exe", "-NoLogo", "-Command", "$ErrorActionPreference='Stop';", "$ProgressPreference='SilentlyContinue';" ]
 # # az cli:
 # kubectl, helm, terraform, git, nvm, node, az cli:
 RUN [ "choco", "install", "--no-progress", "-y", "kubernetes-cli", "kubernetes-helm", "terraform", "git.install", "nvm.portable", "nodejs.install", "azure-cli" ]

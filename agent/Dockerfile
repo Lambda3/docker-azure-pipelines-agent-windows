@@ -51,27 +51,15 @@ RUN $env:ChocolateyIgnoreChecksums = 'true'; `
 RUN $env:ChocolateyIgnoreChecksums = 'true'; `
     Import-Module $Env:ChocolateyInstall\helpers\chocolateyInstaller.psm1; `
     Import-Module $Env:ChocolateyInstall\extensions\chocolatey-visualstudio\*.psm1; `
-    Add-VisualStudioComponent -PackageName visualstudio2022community -VisualStudioYear 2022 -ApplicableProducts Community -Verbose -Component Microsoft.VisualStudio.ComponentGroup.MSIX.Packaging;
-RUN $env:ChocolateyIgnoreChecksums = 'true'; `
-    Import-Module $Env:ChocolateyInstall\helpers\chocolateyInstaller.psm1; `
-    Import-Module $Env:ChocolateyInstall\extensions\chocolatey-visualstudio\*.psm1; `
-    Add-VisualStudioComponent -PackageName visualstudio2022community -VisualStudioYear 2022 -ApplicableProducts Community -Verbose -Component Microsoft.VisualStudio.ComponentGroup.UWP.Support;
-RUN $env:ChocolateyIgnoreChecksums = 'true'; `
-    Import-Module $Env:ChocolateyInstall\helpers\chocolateyInstaller.psm1; `
-    Import-Module $Env:ChocolateyInstall\extensions\chocolatey-visualstudio\*.psm1; `
     Add-VisualStudioComponent -PackageName visualstudio2022community -VisualStudioYear 2022 -ApplicableProducts Community -Verbose -Component Microsoft.VisualStudio.ComponentGroup.UWP.NetCoreAndStandard;
-RUN $env:ChocolateyIgnoreChecksums = 'true'; `
-    Import-Module $Env:ChocolateyInstall\helpers\chocolateyInstaller.psm1; `
-    Import-Module $Env:ChocolateyInstall\extensions\chocolatey-visualstudio\*.psm1; `
-    Add-VisualStudioComponent -PackageName visualstudio2022community -VisualStudioYear 2022 -ApplicableProducts Community -Verbose -Component Microsoft.VisualStudio.Component.Windows10SDK.19041;
+# set shell to pwsh
+SHELL [ "pwsh.exe", "-NoLogo", "-Command", "$ErrorActionPreference='Stop';", "$ProgressPreference='SilentlyContinue';" ]
 # netcore 3.1 (6 is already installed)
 RUN Invoke-WebRequest https://dot.net/v1/dotnet-install.ps1 -OutFile dotnet-install.ps1; `
     .\dotnet-install.ps1 -Channel 3.1 -InstallDir $env:ProgramFiles\dotnet; `
     [Environment]::SetEnvironmentVariable('PATH', \"$HOME\.dotnet\tools;$env:PATH\", [EnvironmentVariableTarget]::Machine); `
     Remove-Item dotnet-install.ps1
-# set shell to pwsh
-SHELL [ "pwsh.exe", "-NoLogo", "-Command", "$ErrorActionPreference='Stop';", "$ProgressPreference='SilentlyContinue';" ]
-# # az cli:
+# az cli:
 # kubectl, helm, terraform, git, nvm, node, az cli:
 RUN [ "choco", "install", "--no-progress", "-y", "kubernetes-cli", "kubernetes-helm", "terraform", "git.install", "nvm.portable", "nodejs.install", "azure-cli" ]
 # chrome, ignores checksum because they cannot be safely verified

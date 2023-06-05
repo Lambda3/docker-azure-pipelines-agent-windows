@@ -24,7 +24,8 @@ It will not work with Azure DevOps Server.
 
 You need/can to set these environment variables:
 
-- `AGENT_PAT` - The personal access token from Azure Pipelines. Required.
+- `AGENT_PAT` - The personal access token from Azure Pipelines. Required. See
+  [Microsoft Docs](https://docs.microsoft.com/en-us/azure/devops/pipelines/agents/v2-linux?view=azure-devops#authenticate-with-a-personal-access-token-pat) for instructions on how to create the PAT.
 - `VS_TENANT` - The Azure Pipelines tenant, a.k.a. the value that goes before .visualstudio.com, i.e., on foo.visualstudio.com, should be `foo`. Required.
 - `AGENT_POOL` - The agent pool. Optional. Default value: `Default`
 

@@ -1,3 +1,7 @@
+# This project is unmaintaned
+
+At this point the project is unmantained. If you wish to collaborate let us know.
+
 # Azure Pipelines Agent Docker Image
 
 This repository contains `Dockerfile` definitions for

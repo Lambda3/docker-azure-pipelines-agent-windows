@@ -15,8 +15,8 @@ on:
         required: false
         default: false
         type: boolean
-  schedule:
-    - cron: "5 3 * * *"
+  # schedule:
+  #   - cron: "5 3 * * *"
   push:
     branches:
       - "**"
